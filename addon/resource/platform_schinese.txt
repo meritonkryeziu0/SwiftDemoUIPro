@@ -69,4 +69,9 @@
 	"SwiftDemoVoice_DragPreview" "松开以放置"
 	"SwiftDemoVoice_ResetPositionHint" "恢复面板默认位置"
 	"SwiftDemoVoice_MenuToggleLabel" "工具"
+	"SwiftDemoVoice_PlaybackShortcuts" "J 后退  /  K 暂停  /  L 前进"
+	"SwiftDemoVoice_SkipDuration" "跳转 {d:seconds} 秒"
+	"SwiftDemoVoice_SkipUnavailable" "当前无法跳转播放进度"
+	"SwiftDemoVoice_SkippedBackward" "已后退 {d:seconds} 秒"
+	"SwiftDemoVoice_SkippedForward" "已前进 {d:seconds} 秒"
 }

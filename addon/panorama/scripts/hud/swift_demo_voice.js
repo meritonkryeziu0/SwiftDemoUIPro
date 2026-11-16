@@ -36,6 +36,8 @@ var SwiftDemoVoice = (function () {
 	var _compactHeight = 56;
 	var _screenPadding = 12;
 	var _snapDistance = 24;
+	var _skipSeconds = 15;
+	var _keyboardShortcutsRegistered = false;
 
 	function _Context() {
 		return $.GetContextPanel();
@@ -308,6 +310,73 @@ var SwiftDemoVoice = (function () {
 		}
 		_SetClass(menu, "custom-position", false);
 		$.Msg("[SwiftDemoVoice] panel position reset");
+	}
+
+	function _SetSkipSeconds(seconds) {
+		var value = Number(seconds);
+		if (!isFinite(value)) return false;
+		_skipSeconds = _Clamp(Math.floor(value), 1, 60);
+		_SetText("SwiftDemoVoiceSkipSeconds", _Localize(
+			"#SwiftDemoVoice_SkipDuration",
+			{ seconds: _skipSeconds }
+		));
+		return true;
+	}
+
+	function AdjustSkipSeconds(delta) {
+		var adjustment = Number(delta);
+		if (!isFinite(adjustment) || adjustment === 0) return false;
+		return _SetSkipSeconds(_skipSeconds + adjustment);
+	}
+
+	function _SeekBySkip(direction) {
+		var state = _GetDemoState();
+		var controller = _DemoController();
+		var currentTick = state ? Number(state.nTick) : NaN;
+		var secondsPerTick = state ? Number(state.nSecondsPerTick) : NaN;
+		var totalTicks = state ? Number(state.nTotalTicks) : NaN;
+		if (!_IsDemoPlayback() || !isFinite(currentTick) || !(secondsPerTick > 0)
+			|| !(totalTicks > 0) || !controller || !controller.GotoTick) {
+			_SetText("SwiftDemoVoiceStatus", _Localize("#SwiftDemoVoice_SkipUnavailable"));
+			return false;
+		}
+
+		var targetTick = Math.floor(currentTick + direction * _skipSeconds / secondsPerTick);
+		targetTick = _Clamp(targetTick, 0, Math.floor(totalTicks) - 1);
+		controller.GotoTick(targetTick);
+		_SetText("SwiftDemoVoiceStatus", _Localize(
+			direction < 0 ? "#SwiftDemoVoice_SkippedBackward" : "#SwiftDemoVoice_SkippedForward",
+			{ seconds: _skipSeconds }
+		));
+		return true;
+	}
+
+	function _HandlePlaybackShortcut(key) {
+		if (!_IsDemoPlayback()) return false;
+		if (key === "j") return _SeekBySkip(-1);
+		if (key === "l") return _SeekBySkip(1);
+		if (key === "k") {
+			if (typeof HudDemoController === "undefined" || !HudDemoController.OnPlayClicked) {
+				$.Msg("[SwiftDemoVoice] pause shortcut unavailable: native DemoUI handler missing");
+				return false;
+			}
+			HudDemoController.OnPlayClicked();
+			return true;
+		}
+		return false;
+	}
+
+	function _SetupKeyboardShortcuts() {
+		if (_keyboardShortcutsRegistered) return;
+		var menu = _Panel("SwiftDemoVoiceMenu");
+		if (!menu || !$.RegisterKeyBind) {
+			$.Msg("[SwiftDemoVoice] playback shortcuts unavailable: Panorama key-bind API missing");
+			return;
+		}
+		$.RegisterKeyBind(menu, "key_j", function () { _HandlePlaybackShortcut("j"); });
+		$.RegisterKeyBind(menu, "key_k", function () { _HandlePlaybackShortcut("k"); });
+		$.RegisterKeyBind(menu, "key_l", function () { _HandlePlaybackShortcut("l"); });
+		_keyboardShortcutsRegistered = true;
 	}
 
 	function _UpdateViewportClass() {
@@ -1250,6 +1319,8 @@ var SwiftDemoVoice = (function () {
 			_nativeUnmuteSeenPlayers = {};
 			_SetMenuVisible(true);
 			_SetOpen(true);
+			_SetSkipSeconds(_skipSeconds);
+			if (menu && menu.SetFocus) menu.SetFocus();
 			Refresh(true);
 			SelectAll();
 			$.Msg("[SwiftDemoVoice] demo detected; all voice slots enabled");
@@ -1269,9 +1340,11 @@ var SwiftDemoVoice = (function () {
 		_UpdateViewportClass();
 		_SetClass(_Panel("SwiftDemoVoiceMenu"), "demo-active", true);
 		_SetupDragging();
+		_SetupKeyboardShortcuts();
 		_MountNativeMenuToggle();
 		_SetMenuVisible(true);
 		_SetOpen(true);
+		_SetSkipSeconds(_skipSeconds);
 		_SetPlayerAvatarMode(false);
 		Refresh(true);
 		_UpdateRoundPicker(true);
@@ -1301,6 +1374,10 @@ var SwiftDemoVoice = (function () {
 		ToggleOpen: ToggleOpen,
 		ToggleMenuVisible: ToggleMenuVisible,
 		ResetPosition: ResetPosition,
+		AdjustSkipSeconds: AdjustSkipSeconds,
+		SetSkipSeconds: _SetSkipSeconds,
+		GetSkipSeconds: function () { return _skipSeconds; },
+		HandlePlaybackShortcutForTest: _HandlePlaybackShortcut,
 		OnLoad: OnLoad
 	};
 })();

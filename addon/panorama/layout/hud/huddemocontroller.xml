@@ -192,6 +192,12 @@
 					<Button class="swift-demo-voice__tool swift-demo-voice__tool--team-t" onactivate="SwiftDemoVoice.SelectTeam('TERRORIST')"><Label text="#SwiftDemoVoice_TerroristsOnly" /></Button>
 					<Button class="swift-demo-voice__tool swift-demo-voice__tool--team-ct" onactivate="SwiftDemoVoice.SelectTeam('CT')"><Label text="#SwiftDemoVoice_CounterTerroristsOnly" /></Button>
 				</Panel>
+				<Panel class="swift-demo-voice__playback-shortcuts" hittest="true" hittestchildren="true">
+					<Label class="swift-demo-voice__playback-shortcuts-label" text="#SwiftDemoVoice_PlaybackShortcuts" hittest="false" />
+					<Button class="swift-demo-voice__skip-step" onactivate="SwiftDemoVoice.AdjustSkipSeconds(-1)"><Label text="-" /></Button>
+					<Label id="SwiftDemoVoiceSkipSeconds" class="swift-demo-voice__skip-seconds" text="#SwiftDemoVoice_SkipDuration" />
+					<Button class="swift-demo-voice__skip-step" onactivate="SwiftDemoVoice.AdjustSkipSeconds(1)"><Label text="+" /></Button>
+				</Panel>
 				<Panel id="SwiftDemoRoundPicker" class="swift-demo-round-picker" hittest="true" hittestchildren="true">
 					<Button id="SwiftDemoRoundToggle" class="swift-demo-round-picker__toggle" onactivate="SwiftDemoVoice.ToggleRoundPicker()">
 						<Panel class="swift-demo-round-picker__icon"><Image src="s2r://panorama/images/icons/ui/skip.vsvg" /></Panel>

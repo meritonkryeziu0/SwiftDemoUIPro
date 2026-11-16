@@ -69,4 +69,9 @@
 	"SwiftDemoVoice_DragPreview" "RELEASE TO PLACE"
 	"SwiftDemoVoice_ResetPositionHint" "Restore the default panel position"
 	"SwiftDemoVoice_MenuToggleLabel" "TOOLS"
+	"SwiftDemoVoice_PlaybackShortcuts" "J BACK  /  K PAUSE  /  L FORWARD"
+	"SwiftDemoVoice_SkipDuration" "{d:seconds}s SKIP"
+	"SwiftDemoVoice_SkipUnavailable" "Playback skip is unavailable"
+	"SwiftDemoVoice_SkippedBackward" "Skipped back {d:seconds}s"
+	"SwiftDemoVoice_SkippedForward" "Skipped forward {d:seconds}s"
 }

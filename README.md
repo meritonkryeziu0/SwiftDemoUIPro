@@ -40,6 +40,7 @@ The added panel keeps the native timeline and playback controls available while 
 - Prepares large Demos and voice indexes in the background, with visible stage feedback instead of freezing the launcher window.
 - Switches to a live player's first-person POV after validating the target.
 - Jumps directly to the beginning of any recorded round.
+- Adds J/K/L playback shortcuts: jump backward, pause/resume, and jump forward. Adjust the jump interval in the in-game panel.
 - Supports English and Simplified Chinese: the launcher follows the system language, while the in-game DemoUI automatically follows the CS2 interface language.
 - Checks the latest official GitHub Release in the background and shows only a small, dismissible notice. Launcher and DemoUI updates remain separate choices; nothing is downloaded automatically.
 - Keeps installation reversible with backups, an isolated staging directory, and explicit cleanup.
@@ -60,7 +61,7 @@ If the launcher was interrupted, reopen it to resume the pending cleanup.
 ## Using the In-Game Panel
 
 - Use CS2's native Demo mouse-mode hotkey to show the cursor.
-- Use the prominent checked tune icon immediately to the right of the playback-speed control in CS2's full native Demo bar to hide the complete Swift Demo tools panel or bring it back. The panel also follows the native **Shift+F2** DemoUI states and does not install a custom keyboard binding.
+- Use the prominent checked tune icon immediately to the right of the playback-speed control in CS2's full native Demo bar to hide the complete Swift Demo tools panel or bring it back. The panel also follows the native **Shift+F2** DemoUI states; J/K/L shortcuts are scoped to this DemoUI and do not rewrite saved CS2 key bindings.
 - When Demo playback starts, all 64 recorded-voice slots are enabled automatically. The panel also uses CS2's Panorama mute APIs to enable each discovered Demo XUID, without directly accessing profile data files.
 - Click a live player to switch to first-person POV; the current POV is highlighted and labeled **CURRENT**. Check **SHOW AVATAR** above the list to show each Steam avatar beside the player's name and team/slot metadata for quicker visual identification.
 - Click the audio button on a player row to toggle only that player's recorded Demo voice slot. Enabling it also clears that XUID's current native mute through `GameStateAPI`.
@@ -68,6 +69,7 @@ If the launcher was interrupted, reopen it to resume the pending cleanup.
 - Player selection follows native team identity: T players use gold/yellow accents and CT players use blue accents for the observed row and enabled voice state.
 - The lower-left speaker HUD follows seeking, pause, and playback speed because it is driven by the current Demo tick rather than a live microphone callback.
 - Expand **ROUND NAVIGATION** and select a round to jump to its starting tick.
+- Use **J** to jump backward, **K** to pause/resume, and **L** to jump forward. Change the skip interval with the `-` and `+` controls in the panel; it starts at 15 seconds and is clamped to 1-60 seconds. These shortcuts are scoped to the DemoUI and do not rewrite CS2's saved key bindings.
 - The panel starts in the lower-right area above the native bottom equipment strip. In Demo mouse mode, drag the gold speaker control to move it; the cursor changes to the move shape and a translucent full-size placement outline follows the pointer while the old panel disappears. The preview snaps near screen edges and the panel is clamped so it cannot be lost off-screen. The reset icon restores the responsive default position, and the remaining title area expands or collapses the panel without changing its readable width. Position is remembered for the current Panorama session and is re-clamped when the viewport changes.
 
 ## Common Problems

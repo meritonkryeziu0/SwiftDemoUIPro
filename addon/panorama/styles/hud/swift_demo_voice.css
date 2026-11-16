@@ -486,6 +486,63 @@
 	margin-bottom: 10px;
 }
 
+.swift-demo-voice__playback-shortcuts
+{
+	width: 100%;
+	height: 32px;
+	flow-children: right;
+	margin-top: -3px;
+	margin-bottom: 9px;
+}
+
+.swift-demo-voice__playback-shortcuts-label
+{
+	width: fill-parent-flow(1.0);
+	vertical-align: center;
+	font-family: Stratum2 Condensed, 'Arial Unicode MS';
+	font-size: 12px;
+	font-weight: bold;
+	letter-spacing: 0.4px;
+	color: #a6a8aa;
+}
+
+.swift-demo-voice__skip-step
+{
+	width: 28px;
+	height: 28px;
+	vertical-align: center;
+	background-color: #ffffff0b;
+	border: 1px solid #ffffff18;
+	border-radius: 2px;
+}
+
+.swift-demo-voice__skip-step:hover
+{
+	border-color: #e4ae3970;
+	background-color: #e4ae391b;
+}
+
+.swift-demo-voice__skip-step Label
+{
+	horizontal-align: center;
+	vertical-align: center;
+	font-family: Stratum2 Condensed, 'Arial Unicode MS';
+	font-size: 16px;
+	font-weight: bold;
+	color: #e4ae39;
+}
+
+.swift-demo-voice__skip-seconds
+{
+	width: 72px;
+	vertical-align: center;
+	text-align: center;
+	font-family: Stratum2 Condensed, 'Arial Unicode MS';
+	font-size: 13px;
+	font-weight: bold;
+	color: #dfe3e6;
+}
+
 .swift-demo-voice__tool
 {
 	width: fill-parent-flow(1.0);

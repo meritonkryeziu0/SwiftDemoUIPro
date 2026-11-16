@@ -253,8 +253,18 @@ if (!/spec_mode 2/.test(source) || /spec_mode 4/.test(source)) {
 	throw new Error("player focus must use CS2 OBS_MODE_IN_EYE (spec_mode 2)");
 }
 
-if (/RegisterKeyBind|key_b|bind\s+[\"']?(?:b|space)/i.test(source)) {
-	throw new Error("custom menu visibility must use the native DemoUI control without installing keyboard bindings");
+if (/RegisterKeyBind\([^)]*key_b/.test(source)
+	|| /bind\s+[\"']?(?:b|space)/i.test(source)) {
+	throw new Error("custom menu visibility must continue to use the native DemoUI control");
+}
+
+if (!/RegisterKeyBind\(menu,\s*"key_j"/.test(source)
+	|| !/RegisterKeyBind\(menu,\s*"key_k"/.test(source)
+	|| !/RegisterKeyBind\(menu,\s*"key_l"/.test(source)
+	|| !/id="SwiftDemoVoiceSkipSeconds"/.test(layout)
+	|| !/SwiftDemoVoice\.AdjustSkipSeconds\(-1\)/.test(layout)
+	|| !/SwiftDemoVoice\.AdjustSkipSeconds\(1\)/.test(layout)) {
+	throw new Error("J/K/L playback shortcuts and adjustable skip duration must be available in the in-game panel");
 }
 
 if (/bluedots_large_png\.vtex/.test(style)
@@ -335,6 +345,8 @@ var commands = [];
 var gotoTicks = [];
 var scheduledCallbacks = [];
 var demoState = null;
+var registeredKeyBinds = {};
+var menuFocusSet = false;
 var startupClasses = {};
 var dockClasses = {};
 var menuToggleParent = null;
@@ -346,7 +358,8 @@ var dockPanel = {
 	SetHasClass: function (name, enabled) { dockClasses[name] = enabled; }
 };
 var menuPanel = {
-	SetHasClass: function (name, enabled) { startupClasses[name] = enabled; }
+	SetHasClass: function (name, enabled) { startupClasses[name] = enabled; },
+	SetFocus: function () { menuFocusSet = true; }
 };
 var speedControlsPanel = {};
 var controlRowPanel = {
@@ -382,6 +395,10 @@ var context = {
 		Schedule: function (delay, callback) {
 			if (delay === 0 && callback) callback();
 			else if (callback) scheduledCallbacks.push({ delay: delay, callback: callback });
+		},
+		RegisterKeyBind: function (target, key, callback) {
+			if (target !== menuPanel) throw new Error("playback shortcuts must bind to the DemoUI menu");
+			registeredKeyBinds[key] = callback;
 		},
 		Msg: function () {}
 	},
@@ -420,7 +437,8 @@ if (startupClasses["demo-active"] !== true || startupClasses.collapsed !== false
 	|| dockClasses["menu-hidden"] !== false || menuToggleClasses.selected !== true
 	|| startupClasses["avatar-mode"] !== false || avatarModeClasses.selected !== false || avatarTogglePanel.selected !== false
 	|| menuToggleParent !== controlRowPanel || menuToggleClasses["native-mounted"] !== true
-	|| !menuToggleOrder || menuToggleOrder.child !== menuTogglePanel || menuToggleOrder.sibling !== speedControlsPanel) {
+	|| !menuToggleOrder || menuToggleOrder.child !== menuTogglePanel || menuToggleOrder.sibling !== speedControlsPanel
+	|| !registeredKeyBinds.key_j || !registeredKeyBinds.key_k || !registeredKeyBinds.key_l) {
 	throw new Error("self-start must make the menu visible and expanded");
 }
 if (context.SwiftDemoVoice.TogglePlayerAvatarMode() !== true
@@ -493,7 +511,7 @@ if (context.SwiftDemoVoice.RoundNumberForTick(-1, testRounds) !== 0 ||
 	throw new Error("round number lookup failed");
 }
 
-demoState = { nTick: 125, nSecondsPerTick: 0.015625, RoundIntervals: testRounds };
+demoState = { nTick: 125, nTotalTicks: 1000, nSecondsPerTick: 0.015625, RoundIntervals: testRounds };
 if (!context.SwiftDemoVoice.JumpToRound(2) || gotoTicks[0] !== 300 || context.SwiftDemoVoice.JumpToRound(8)) {
 	throw new Error("direct round jump failed: " + JSON.stringify(gotoTicks));
 }
@@ -538,6 +556,45 @@ testPlayerSources[1].name = "Fallback Name";
 var initialDemoPoll = takeScheduledCallback(0.25);
 if (!initialDemoPoll) throw new Error("Demo voice startup poll was not scheduled");
 initialDemoPoll();
+if (!menuFocusSet) throw new Error("Demo playback shortcuts must receive keyboard focus when a Demo starts");
+if (context.SwiftDemoVoice.GetSkipSeconds() !== 15
+	|| !context.SwiftDemoVoice.SetSkipSeconds(8)
+	|| context.SwiftDemoVoice.GetSkipSeconds() !== 8
+	|| !context.SwiftDemoVoice.AdjustSkipSeconds(1)
+	|| context.SwiftDemoVoice.GetSkipSeconds() !== 9
+	|| !context.SwiftDemoVoice.SetSkipSeconds(0)
+	|| context.SwiftDemoVoice.GetSkipSeconds() !== 1
+	|| !context.SwiftDemoVoice.SetSkipSeconds(61)
+	|| context.SwiftDemoVoice.GetSkipSeconds() !== 60) {
+	throw new Error("in-game skip duration must be adjustable and clamped to 1-60 seconds");
+}
+context.SwiftDemoVoice.SetSkipSeconds(2);
+demoState.nTick = 500;
+if (!context.SwiftDemoVoice.HandlePlaybackShortcutForTest("j") || gotoTicks[gotoTicks.length - 1] !== 372) {
+	throw new Error("J must seek backward by the configured number of seconds");
+}
+demoState.nTick = 372;
+if (!context.SwiftDemoVoice.HandlePlaybackShortcutForTest("l") || gotoTicks[gotoTicks.length - 1] !== 500) {
+	throw new Error("L must seek forward by the configured number of seconds");
+}
+demoState.nTick = 10;
+context.SwiftDemoVoice.HandlePlaybackShortcutForTest("j");
+if (gotoTicks[gotoTicks.length - 1] !== 0) throw new Error("backward seek must clamp to the start of the Demo");
+demoState.nTick = 990;
+context.SwiftDemoVoice.HandlePlaybackShortcutForTest("l");
+if (gotoTicks[gotoTicks.length - 1] !== 999) throw new Error("forward seek must clamp to the end of the Demo");
+var pausedByShortcut = false;
+context.HudDemoController = {
+	OnPlayClicked: function () {
+		pausedByShortcut = !pausedByShortcut;
+	}
+};
+if (!context.SwiftDemoVoice.HandlePlaybackShortcutForTest("k")
+	|| !pausedByShortcut
+	|| !context.SwiftDemoVoice.HandlePlaybackShortcutForTest("k")
+	|| pausedByShortcut) {
+	throw new Error("K must toggle native DemoUI playback pause");
+}
 if (JSON.stringify(nativeMuteToggles) !== JSON.stringify(["101", "202"])) {
 	throw new Error("Demo startup must clear native mutes through GameStateAPI: " + JSON.stringify(nativeMuteToggles));
 }
